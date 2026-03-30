@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daily Habit Tracker</title>
-
-<!-- PWA Meta Tags -->
 <meta name="theme-color" content="#0d0d0d">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,421 +11,125 @@
 <meta name="apple-mobile-web-app-title" content="Habits">
 <meta name="description" content="Track your daily habits and build streaks.">
 <link rel="manifest" href="manifest.json">
-
-<!-- Favicon / App Icon fallback -->
 <link rel="apple-touch-icon" href="icon-192.png">
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0d0d;
-    --surface: #161616;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --accent: #c8f044;
-    --accent2: #44f0c8;
-    --text: #f0ede6;
-    --text-muted: #666;
-    --text-dim: #999;
-    --danger: #f04444;
-    --radius: 16px;
+    --bg: #0d0d0d; --surface: #161616; --surface2: #1e1e1e;
+    --border: #2a2a2a; --accent: #c8f044; --accent2: #44f0c8;
+    --text: #f0ede6; --text-muted: #666; --text-dim: #999;
+    --danger: #f04444; --radius: 16px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; padding: 40px 20px; position: relative; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(200,240,68,0.06) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+  body::after  { content: ''; position: fixed; bottom: -200px; left: -200px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(68,240,200,0.05) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+  .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    min-height: 100vh;
-    padding: 40px 20px;
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: -200px; right: -200px;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(200,240,68,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: -200px; left: -200px;
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(68,240,200,0.05) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  header {
-    margin-bottom: 48px;
-  }
-  header .label {
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(36px, 6vw, 64px);
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
+  header { margin-bottom: 32px; }
+  header .label { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px,6vw,64px); font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
   header h1 span { color: var(--accent); }
-  header p {
-    margin-top: 12px;
-    color: var(--text-muted);
-    font-size: 13px;
-    letter-spacing: 0.05em;
-  }
+  header p { margin-top: 12px; color: var(--text-muted); font-size: 13px; letter-spacing: 0.05em; }
+
+  /* SYNC STATUS BAR */
+  .sync-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); margin-bottom: 16px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; transition: background 0.3s; }
+  .sync-dot.synced  { background: var(--accent); }
+  .sync-dot.syncing { background: var(--accent2); animation: pulse 1s infinite; }
+  .sync-dot.error   { background: var(--danger); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .sync-label { flex: 1; }
+  .sync-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 4px 10px; font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.2s; }
+  .sync-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SETUP PANEL */
+  .setup-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+  .setup-panel h2 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 6px; }
+  .setup-panel p { font-size: 11px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; letter-spacing: 0.03em; }
+  .setup-panel p a { color: var(--accent2); text-decoration: none; }
+  .setup-panel p a:hover { text-decoration: underline; }
+  .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .input-group label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); }
+  .input-group input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; transition: border-color 0.2s; letter-spacing: 0.03em; }
+  .input-group input:focus { border-color: var(--accent2); }
+  .input-group input::placeholder { color: var(--text-muted); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.2s; }
+  .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+  .setup-error { font-size: 11px; color: var(--danger); margin-top: 10px; display: none; }
 
   /* CALENDAR */
-  .calendar-nav {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .month-label {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    flex: 1;
-  }
-  .nav-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
+  .calendar-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .month-label { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; flex: 1; }
+  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
-  .day-header {
-    text-align: center;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 8px 0;
-  }
-  .day-cell {
-    aspect-ratio: 1;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all 0.2s;
-    position: relative;
-    padding: 6px 4px;
-  }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day-header { text-align: center; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); padding: 8px 0; }
+  .day-cell { aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; position: relative; padding: 6px 4px; }
   .day-cell:hover { border-color: var(--accent); transform: translateY(-1px); }
   .day-cell.empty { background: transparent; border-color: transparent; cursor: default; }
   .day-cell.empty:hover { transform: none; }
   .day-cell.today { border-color: var(--accent); }
   .day-cell.today .day-num { color: var(--accent); }
   .day-cell.has-data { background: var(--surface2); }
-  .day-num {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1;
-  }
-  .day-progress {
-    width: 80%;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .day-progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--accent);
-    transition: width 0.3s;
-  }
-  .day-dots {
-    display: flex;
-    gap: 2px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 90%;
-  }
-  .dot {
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--border);
-  }
+  .day-num { font-size: 13px; font-weight: 500; line-height: 1; }
+  .day-progress { width: 80%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .day-progress-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.3s; }
+  .day-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; max-width: 90%; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border); }
   .dot.done { background: var(--accent); }
 
+  /* STREAK */
+  .streak-bar { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 14px 16px; background: var(--surface2); border-radius: 12px; border: 1px solid var(--border); }
+  .streak-icon { font-size: 22px; }
+  .streak-info { flex: 1; }
+  .streak-num { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .streak-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
   /* MODAL */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(6px);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .overlay.open { display: flex; animation: fadeIn 0.2s ease; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    width: 100%;
-    max-width: 460px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    position: relative;
-  }
-  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-  .modal-header {
-    padding: 24px 24px 0;
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    z-index: 1;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .modal-date-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
-  .modal-date {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    font-weight: 700;
-  }
-  .modal-close {
-    position: absolute;
-    top: 20px; right: 20px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
+  @keyframes fadeIn { from{opacity:0}to{opacity:1} }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1); position: relative; }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1} }
+  .modal-header { padding: 24px 24px 20px; position: sticky; top: 0; background: var(--surface); z-index: 1; border-bottom: 1px solid var(--border); }
+  .modal-date-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .modal-date { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .modal-close:hover { color: var(--text); border-color: var(--text-muted); }
-
-  .progress-bar-wrap {
-    margin-top: 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .progress-bar {
-    flex: 1;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    transition: width 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .progress-text {
-    font-size: 11px;
-    color: var(--text-dim);
-    min-width: 36px;
-    text-align: right;
-  }
-
+  .progress-bar-wrap { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+  .progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .progress-text { font-size: 11px; color: var(--text-dim); min-width: 36px; text-align: right; }
   .modal-body { padding: 20px 24px 24px; }
-
-  .section-label {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    margin-top: 20px;
-  }
+  .section-label { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; margin-top: 20px; }
   .section-label:first-child { margin-top: 0; }
-
   .checklist { display: flex; flex-direction: column; gap: 6px; }
-
-  .check-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    cursor: pointer;
-    transition: all 0.18s;
-    user-select: none;
-  }
+  .check-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all 0.18s; user-select: none; }
   .check-item:hover { border-color: #333; background: #111; }
   .check-item.checked { border-color: var(--accent); background: rgba(200,240,68,0.05); }
-
-  .check-box {
-    width: 20px; height: 20px;
-    border-radius: 6px;
-    border: 1.5px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s;
-    font-size: 11px;
-  }
-  .check-item.checked .check-box {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #000;
-  }
-
-  .check-label {
-    flex: 1;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    transition: color 0.2s;
-  }
+  .check-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 11px; }
+  .check-item.checked .check-box { background: var(--accent); border-color: var(--accent); color: #000; }
+  .check-label { flex: 1; font-size: 13px; letter-spacing: 0.02em; transition: color 0.2s; }
   .check-item.checked .check-label { color: var(--text-muted); text-decoration: line-through; }
-
   .check-icon { font-size: 15px; }
-
-  /* Notes */
-  .notes-area {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    padding: 12px 14px;
-    resize: vertical;
-    min-height: 80px;
-    outline: none;
-    transition: border-color 0.2s;
-    letter-spacing: 0.02em;
-    line-height: 1.6;
-  }
+  .notes-area { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; padding: 12px 14px; resize: vertical; min-height: 80px; outline: none; transition: border-color 0.2s; letter-spacing: 0.02em; line-height: 1.6; }
   .notes-area:focus { border-color: var(--accent2); }
   .notes-area::placeholder { color: var(--text-muted); }
 
-  /* Streak */
-  .streak-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 32px;
-    padding: 14px 16px;
-    background: var(--surface2);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-  }
-  .streak-icon { font-size: 22px; }
-  .streak-info { flex: 1; }
-  .streak-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .streak-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
-
   /* Install banner */
-  #install-banner {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--surface2);
-    border: 1px solid var(--accent);
-    border-radius: 12px;
-    padding: 12px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 200;
-    font-size: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    max-width: calc(100vw - 40px);
-    animation: slideUp 0.3s ease;
-  }
-  #install-banner.hidden { display: none !important; }
-  #install-btn {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 7px;
-    padding: 7px 14px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    letter-spacing: 0.05em;
-  }
-  #install-dismiss {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0 4px;
-    line-height: 1;
-  }
+  #install-banner { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; gap: 12px; z-index: 200; font-size: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: calc(100vw - 40px); }
+  #install-banner.hidden { display: none; }
+  #install-btn { background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 7px 14px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; letter-spacing: 0.05em; }
+  #install-dismiss { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
 
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  @media (max-width: 500px) {
-    .day-cell { border-radius: 7px; }
-    .day-num { font-size: 11px; }
-    .dot { width: 3px; height: 3px; }
-  }
+  @media (max-width: 500px) { .day-cell{border-radius:7px} .day-num{font-size:11px} .dot{width:3px;height:3px} }
 </style>
 </head>
 <body>
@@ -438,15 +140,42 @@
     <p>Click any date to log your habits for that day.</p>
   </header>
 
+  <!-- SETUP PANEL -->
+  <div class="setup-panel" id="setupPanel">
+    <h2>Connect to Gist ☁️</h2>
+    <p>
+      Your data syncs across all devices via a private GitHub Gist.<br><br>
+      1. Open <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+      2. Give it a name like "HabitTracker"<br>
+      3. Tick the <strong>gist</strong> scope only<br>
+      4. Click <strong>Generate token</strong> and paste it below
+    </p>
+    <div class="input-group">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="setupGist()">Connect &amp; Sync</button>
+      <button class="btn-secondary" onclick="skipSetup()">Use offline only</button>
+    </div>
+    <div class="setup-error" id="setupError"></div>
+  </div>
+
+  <!-- SYNC BAR -->
+  <div class="sync-bar" id="syncBar" style="display:none">
+    <div class="sync-dot" id="syncDot"></div>
+    <div class="sync-label" id="syncLabel">Not synced</div>
+    <button class="sync-btn" onclick="forceSync()">↻ Sync now</button>
+    <button class="sync-btn" onclick="disconnectGist()" style="border-color:transparent">✕ Disconnect</button>
+  </div>
+
   <div class="streak-bar">
     <div class="streak-icon">🔥</div>
     <div class="streak-info">
       <div class="streak-num" id="streakCount">0</div>
       <div class="streak-sub">day streak</div>
     </div>
-    <div style="font-size:11px;color:var(--text-muted);text-align:right;line-height:1.5;">
-      Keep it going.<br>Don't break the chain.
-    </div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:right;line-height:1.5;">Keep it going.<br>Don't break the chain.</div>
   </div>
 
   <br>
@@ -456,14 +185,9 @@
     <div class="month-label" id="monthLabel"></div>
     <button class="nav-btn" onclick="changeMonth(1)">&#8594;</button>
   </div>
-
   <div class="calendar-grid" id="calGrid">
-    <div class="day-header">Su</div>
-    <div class="day-header">Mo</div>
-    <div class="day-header">Tu</div>
-    <div class="day-header">We</div>
-    <div class="day-header">Th</div>
-    <div class="day-header">Fr</div>
+    <div class="day-header">Su</div><div class="day-header">Mo</div><div class="day-header">Tu</div>
+    <div class="day-header">We</div><div class="day-header">Th</div><div class="day-header">Fr</div>
     <div class="day-header">Sa</div>
   </div>
 </div>
@@ -476,29 +200,20 @@
       <div class="modal-date" id="modalDateTitle"></div>
       <button class="modal-close" onclick="closeModal()">✕</button>
       <div class="progress-bar-wrap">
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
         <div class="progress-text" id="progressText">0/10</div>
       </div>
     </div>
     <div class="modal-body">
-      <div class="section-label">Body & Health</div>
-      <div class="checklist" id="checklist-body"></div>
-
-      <div class="section-label">Mind & Skills</div>
-      <div class="checklist" id="checklist-mind"></div>
-
-      <div class="section-label">Wellness</div>
-      <div class="checklist" id="checklist-wellness"></div>
-
+      <div class="section-label">Body &amp; Health</div><div class="checklist" id="checklist-body"></div>
+      <div class="section-label">Mind &amp; Skills</div><div class="checklist" id="checklist-mind"></div>
+      <div class="section-label">Wellness</div><div class="checklist" id="checklist-wellness"></div>
       <div class="section-label">Notes for today</div>
       <textarea class="notes-area" id="notesArea" placeholder="Thoughts, reflections, wins..." rows="3"></textarea>
     </div>
   </div>
 </div>
 
-<!-- PWA Install Banner -->
 <div id="install-banner" class="hidden">
   <span>📲 Add to your home screen</span>
   <button id="install-btn">Install App</button>
@@ -506,252 +221,258 @@
 </div>
 
 <script>
-  // ── Register Service Worker ──────────────────────────────────────────────
+  // Service Worker
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.log('SW error:', err));
-    });
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
   }
 
-  // ── PWA Install Prompt ───────────────────────────────────────────────────
+  // PWA Install
   let deferredPrompt = null;
   const banner = document.getElementById('install-banner');
-  const installBtn = document.getElementById('install-btn');
-  const dismissBtn = document.getElementById('install-dismiss');
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; banner.classList.remove('hidden'); });
+  document.getElementById('install-btn').addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if (outcome==='accepted') banner.classList.add('hidden'); deferredPrompt=null; });
+  document.getElementById('install-dismiss').addEventListener('click', () => banner.classList.add('hidden'));
+  window.addEventListener('appinstalled', () => { banner.classList.add('hidden'); deferredPrompt=null; });
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    banner.classList.remove('hidden');
-  });
-
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') banner.classList.add('hidden');
-    deferredPrompt = null;
-  });
-
-  dismissBtn.addEventListener('click', () => {
-    banner.classList.add('hidden');
-  });
-
-  window.addEventListener('appinstalled', () => {
-    banner.classList.add('hidden');
-    deferredPrompt = null;
-  });
-
-  // ── Habit Tracker Logic ──────────────────────────────────────────────────
+  // Habits
   const HABITS = {
     body: [
-      { id: 'protein', label: 'Protein consumption', icon: '🥩' },
-      { id: 'calories', label: 'Calorie count logged', icon: '🔢' },
-      { id: 'gym',     label: 'Gym check-in', icon: '🏋️' },
-      { id: 'hydrate', label: 'Drink 2L+ water', icon: '💧' },
+      { id:'protein',  label:'Protein consumption',   icon:'🥩' },
+      { id:'calories', label:'Calorie count logged',  icon:'🔢' },
+      { id:'gym',      label:'Gym check-in',          icon:'🏋️' },
+      { id:'hydrate',  label:'Drink 2L+ water',       icon:'💧' },
     ],
     mind: [
-      { id: 'sketch',  label: '1 hour sketch', icon: '✏️' },
-      { id: 'read',    label: 'Read min 3 pages', icon: '📖' },
-      { id: 'noPhone', label: 'No phone first 30 min', icon: '📵' },
+      { id:'sketch',   label:'1 hour sketch',         icon:'✏️' },
+      { id:'read',     label:'Read min 3 pages',      icon:'📖' },
+      { id:'noPhone',  label:'No phone first 30 min', icon:'📵' },
     ],
     wellness: [
-      { id: 'sleep',    label: '7 hours of sleep', icon: '🌙' },
-      { id: 'skincare', label: 'Skin care routine', icon: '✨' },
-      { id: 'gratitude',label: 'Gratitude note', icon: '🙏' },
+      { id:'sleep',    label:'7 hours of sleep',      icon:'🌙' },
+      { id:'skincare', label:'Skin care routine',     icon:'✨' },
+      { id:'gratitude',label:'Gratitude note',        icon:'🙏' },
     ]
   };
-
   const ALL_HABITS = [...HABITS.body, ...HABITS.mind, ...HABITS.wellness];
   const TOTAL = ALL_HABITS.length;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+  // State
   let data = JSON.parse(localStorage.getItem('habitData') || '{}');
   let currentDate = new Date();
   let viewYear = currentDate.getFullYear();
   let viewMonth = currentDate.getMonth();
   let activeKey = null;
+  let syncTimeout = null;
 
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  // Gist config — stored locally per device, data lives in the Gist
+  let ghToken = localStorage.getItem('ghToken') || null;
+  let gistId   = localStorage.getItem('gistId')  || null;
+  const GIST_FILE = 'habit-tracker-data.json';
 
+  function setSyncStatus(state, msg) {
+    document.getElementById('syncDot').className = 'sync-dot ' + state;
+    document.getElementById('syncLabel').textContent = msg;
+  }
+
+  async function gistRequest(method, body) {
+    const url = gistId
+      ? `https://api.github.com/gists/${gistId}`
+      : 'https://api.github.com/gists';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    return res.json();
+  }
+
+  async function loadFromGist() {
+    if (!ghToken || !gistId) return;
+    setSyncStatus('syncing', 'Fetching…');
+    try {
+      const gist = await gistRequest('GET');
+      const raw = gist.files[GIST_FILE]?.content;
+      if (raw) {
+        data = JSON.parse(raw);
+        localStorage.setItem('habitData', JSON.stringify(data));
+        renderCalendar();
+      }
+      setSyncStatus('synced', 'Synced · ' + new Date().toLocaleTimeString());
+    } catch(e) {
+      setSyncStatus('error', 'Sync failed — using local data');
+    }
+  }
+
+  async function saveToGist() {
+    if (!ghToken) { localStorage.setItem('habitData', JSON.stringify(data)); return; }
+    setSyncStatus('syncing', 'Saving…');
+    try {
+      const body = {
+        description: 'Habit Tracker Data',
+        public: false,
+        files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } }
+      };
+      const gist = await gistRequest(gistId ? 'PATCH' : 'POST', body);
+      if (!gistId) { gistId = gist.id; localStorage.setItem('gistId', gistId); }
+      localStorage.setItem('habitData', JSON.stringify(data));
+      setSyncStatus('synced', 'Synced · ' + new Date().toLocaleTimeString());
+    } catch(e) {
+      setSyncStatus('error', 'Sync failed — saved locally');
+      localStorage.setItem('habitData', JSON.stringify(data));
+    }
+  }
+
+  // Debounced save — instant localStorage, Gist after 1.5s of inactivity
   function save() {
     localStorage.setItem('habitData', JSON.stringify(data));
+    if (!ghToken) return;
+    clearTimeout(syncTimeout);
+    setSyncStatus('syncing', 'Pending…');
+    syncTimeout = setTimeout(saveToGist, 1500);
   }
 
-  function getKey(y, m, d) {
-    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  function forceSync() { loadFromGist(); }
+
+  async function setupGist() {
+    const token = document.getElementById('tokenInput').value.trim();
+    const errEl = document.getElementById('setupError');
+    errEl.style.display = 'none';
+    if (!token) { errEl.textContent = 'Please enter a token.'; errEl.style.display='block'; return; }
+    try {
+      const res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: 'Habit Tracker Data',
+          public: false,
+          files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } }
+        })
+      });
+      if (!res.ok) throw new Error('Invalid token or missing gist scope');
+      const gist = await res.json();
+      ghToken = token; gistId = gist.id;
+      localStorage.setItem('ghToken', ghToken);
+      localStorage.setItem('gistId', gistId);
+      showSyncBar();
+      setSyncStatus('synced', 'Connected · ' + new Date().toLocaleTimeString());
+    } catch(e) {
+      errEl.textContent = '❌ ' + e.message;
+      errEl.style.display = 'block';
+    }
   }
 
-  function getDayData(key) {
-    if (!data[key]) data[key] = { checks: {}, notes: '' };
-    return data[key];
+  function skipSetup() {
+    localStorage.setItem('skipGist', '1');
+    document.getElementById('setupPanel').style.display = 'none';
   }
 
-  function getDoneCount(key) {
-    const d = data[key];
-    if (!d) return 0;
-    return ALL_HABITS.filter(h => d.checks[h.id]).length;
+  function disconnectGist() {
+    if (!confirm('Disconnect Gist sync? Local data stays. You can reconnect any time.')) return;
+    ghToken = null; gistId = null;
+    localStorage.removeItem('ghToken'); localStorage.removeItem('gistId'); localStorage.removeItem('skipGist');
+    document.getElementById('syncBar').style.display = 'none';
+    document.getElementById('setupPanel').style.display = 'block';
   }
+
+  function showSyncBar() {
+    document.getElementById('setupPanel').style.display = 'none';
+    document.getElementById('syncBar').style.display = 'flex';
+  }
+
+  // Init
+  function init() {
+    if (ghToken && gistId) { showSyncBar(); loadFromGist(); }
+    else if (localStorage.getItem('skipGist')) { document.getElementById('setupPanel').style.display = 'none'; }
+    renderCalendar();
+  }
+
+  // Calendar helpers
+  function getKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  function getDayData(key) { if (!data[key]) data[key]={checks:{},notes:''}; return data[key]; }
+  function getDoneCount(key) { const d=data[key]; if(!d)return 0; return ALL_HABITS.filter(h=>d.checks[h.id]).length; }
 
   function renderCalendar() {
     document.getElementById('monthLabel').textContent = `${MONTHS[viewMonth]} ${viewYear}`;
     const grid = document.getElementById('calGrid');
-    const headers = Array.from(grid.children).slice(0, 7);
-    grid.innerHTML = '';
-    headers.forEach(h => grid.appendChild(h));
-
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
-    const todayKey = getKey(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-
-    for (let i = 0; i < firstDay; i++) {
-      const el = document.createElement('div');
-      el.className = 'day-cell empty';
+    const headers = Array.from(grid.children).slice(0,7);
+    grid.innerHTML = ''; headers.forEach(h=>grid.appendChild(h));
+    const firstDay = new Date(viewYear,viewMonth,1).getDay();
+    const daysInMonth = new Date(viewYear,viewMonth+1,0).getDate();
+    const todayKey = getKey(currentDate.getFullYear(),currentDate.getMonth(),currentDate.getDate());
+    for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='day-cell empty';grid.appendChild(el);}
+    for(let d=1;d<=daysInMonth;d++){
+      const key=getKey(viewYear,viewMonth,d);
+      const done=getDoneCount(key); const pct=Math.round((done/TOTAL)*100);
+      const el=document.createElement('div');
+      el.className='day-cell'+(key===todayKey?' today':'')+(done>0?' has-data':'');
+      el.onclick=()=>openModal(viewYear,viewMonth,d);
+      const numEl=document.createElement('div');numEl.className='day-num';numEl.textContent=d;el.appendChild(numEl);
+      if(done>0){const bar=document.createElement('div');bar.className='day-progress';const fill=document.createElement('div');fill.className='day-progress-fill';fill.style.width=pct+'%';bar.appendChild(fill);el.appendChild(bar);}
+      else{const dots=document.createElement('div');dots.className='day-dots';for(let i=0;i<Math.min(TOTAL,10);i++){const dot=document.createElement('div');dot.className='dot';dots.appendChild(dot);}el.appendChild(dots);}
       grid.appendChild(el);
     }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = getKey(viewYear, viewMonth, d);
-      const done = getDoneCount(key);
-      const pct = Math.round((done / TOTAL) * 100);
-      const isToday = key === todayKey;
-
-      const el = document.createElement('div');
-      el.className = 'day-cell' + (isToday ? ' today' : '') + (done > 0 ? ' has-data' : '');
-      el.onclick = () => openModal(viewYear, viewMonth, d);
-
-      const numEl = document.createElement('div');
-      numEl.className = 'day-num';
-      numEl.textContent = d;
-      el.appendChild(numEl);
-
-      if (done > 0) {
-        const bar = document.createElement('div');
-        bar.className = 'day-progress';
-        const fill = document.createElement('div');
-        fill.className = 'day-progress-fill';
-        fill.style.width = pct + '%';
-        bar.appendChild(fill);
-        el.appendChild(bar);
-      } else {
-        const dots = document.createElement('div');
-        dots.className = 'day-dots';
-        for (let i = 0; i < Math.min(TOTAL, 10); i++) {
-          const dot = document.createElement('div');
-          dot.className = 'dot';
-          dots.appendChild(dot);
-        }
-        el.appendChild(dots);
-      }
-
-      grid.appendChild(el);
-    }
-
     updateStreak();
   }
 
-  function updateStreak() {
-    let streak = 0;
-    const d = new Date(currentDate);
-    while (true) {
-      const key = getKey(d.getFullYear(), d.getMonth(), d.getDate());
-      const done = getDoneCount(key);
-      if (done === TOTAL) {
-        streak++;
-        d.setDate(d.getDate() - 1);
-      } else break;
-    }
-    document.getElementById('streakCount').textContent = streak;
-  }
+  function updateStreak(){let s=0;const d=new Date(currentDate);while(true){const key=getKey(d.getFullYear(),d.getMonth(),d.getDate());if(getDoneCount(key)===TOTAL){s++;d.setDate(d.getDate()-1);}else break;}document.getElementById('streakCount').textContent=s;}
 
-  function openModal(y, m, d) {
-    activeKey = getKey(y, m, d);
-    const dayData = getDayData(activeKey);
-
-    const dateObj = new Date(y, m, d);
-    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    document.getElementById('modalDayLabel').textContent = dayNames[dateObj.getDay()];
-    document.getElementById('modalDateTitle').textContent = `${d} ${MONTHS[m]} ${y}`;
-    document.getElementById('notesArea').value = dayData.notes || '';
-
-    renderChecklist('checklist-body', HABITS.body, dayData);
-    renderChecklist('checklist-mind', HABITS.mind, dayData);
-    renderChecklist('checklist-wellness', HABITS.wellness, dayData);
-
+  function openModal(y,m,d){
+    activeKey=getKey(y,m,d);const dayData=getDayData(activeKey);
+    const dateObj=new Date(y,m,d);
+    const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    document.getElementById('modalDayLabel').textContent=dayNames[dateObj.getDay()];
+    document.getElementById('modalDateTitle').textContent=`${d} ${MONTHS[m]} ${y}`;
+    document.getElementById('notesArea').value=dayData.notes||'';
+    renderChecklist('checklist-body',HABITS.body,dayData);
+    renderChecklist('checklist-mind',HABITS.mind,dayData);
+    renderChecklist('checklist-wellness',HABITS.wellness,dayData);
     updateProgress(dayData);
-
     document.getElementById('overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow='hidden';
   }
 
-  function renderChecklist(containerId, habits, dayData) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    habits.forEach(h => {
-      const checked = !!dayData.checks[h.id];
-      const item = document.createElement('div');
-      item.className = 'check-item' + (checked ? ' checked' : '');
-      item.dataset.id = h.id;
-      item.onclick = () => toggleHabit(h.id, item);
-      item.innerHTML = `
-        <div class="check-icon">${h.icon}</div>
-        <div class="check-label">${h.label}</div>
-        <div class="check-box">${checked ? '✓' : ''}</div>
-      `;
-      container.appendChild(item);
+  function renderChecklist(id,habits,dayData){
+    const c=document.getElementById(id);c.innerHTML='';
+    habits.forEach(h=>{
+      const checked=!!dayData.checks[h.id];
+      const item=document.createElement('div');
+      item.className='check-item'+(checked?' checked':'');
+      item.dataset.id=h.id;item.onclick=()=>toggleHabit(h.id,item);
+      item.innerHTML=`<div class="check-icon">${h.icon}</div><div class="check-label">${h.label}</div><div class="check-box">${checked?'✓':''}</div>`;
+      c.appendChild(item);
     });
   }
 
-  function toggleHabit(id, el) {
-    const dayData = getDayData(activeKey);
-    dayData.checks[id] = !dayData.checks[id];
-    const checked = dayData.checks[id];
-    el.classList.toggle('checked', checked);
-    el.querySelector('.check-box').textContent = checked ? '✓' : '';
-    updateProgress(dayData);
-    save();
-    renderCalendar();
+  function toggleHabit(id,el){
+    const dayData=getDayData(activeKey);dayData.checks[id]=!dayData.checks[id];
+    const checked=dayData.checks[id];
+    el.classList.toggle('checked',checked);el.querySelector('.check-box').textContent=checked?'✓':'';
+    updateProgress(dayData);save();renderCalendar();
   }
 
-  function updateProgress(dayData) {
-    const done = ALL_HABITS.filter(h => dayData.checks[h.id]).length;
-    const pct = Math.round((done / TOTAL) * 100);
-    document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('progressText').textContent = `${done}/${TOTAL}`;
+  function updateProgress(dayData){
+    const done=ALL_HABITS.filter(h=>dayData.checks[h.id]).length;
+    document.getElementById('progressFill').style.width=Math.round((done/TOTAL)*100)+'%';
+    document.getElementById('progressText').textContent=`${done}/${TOTAL}`;
   }
 
-  function closeModal() {
-    if (activeKey) {
-      getDayData(activeKey).notes = document.getElementById('notesArea').value;
-      save();
-    }
+  function closeModal(){
+    if(activeKey){getDayData(activeKey).notes=document.getElementById('notesArea').value;save();}
     document.getElementById('overlay').classList.remove('open');
-    document.body.style.overflow = '';
-    activeKey = null;
-    renderCalendar();
+    document.body.style.overflow='';activeKey=null;renderCalendar();
   }
 
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('overlay')) closeModal();
-  }
+  function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
 
-  document.getElementById('notesArea').addEventListener('blur', () => {
-    if (activeKey) {
-      getDayData(activeKey).notes = document.getElementById('notesArea').value;
-      save();
-    }
+  document.getElementById('notesArea').addEventListener('blur',()=>{
+    if(activeKey){getDayData(activeKey).notes=document.getElementById('notesArea').value;save();}
   });
 
-  function changeMonth(dir) {
-    viewMonth += dir;
-    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-    if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
-    renderCalendar();
-  }
+  function changeMonth(dir){viewMonth+=dir;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();}
 
-  renderCalendar();
+  init();
 </script>
 </body>
 </html>

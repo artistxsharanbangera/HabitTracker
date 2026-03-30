@@ -82,17 +82,8 @@
   .day-cell.empty{background:transparent;border-color:transparent;cursor:default}
 
   /* TODAY */
-  .day-cell.today{border-color:var(--accent);box-shadow:0 0 12px rgba(200,240,68,0.25);background:rgba(200,240,68,0.04)}
-  .day-cell.today .day-num{color:var(--accent);font-weight:700}
-
-  /* PAST — subtly greyed, still clickable */
-  .day-cell.past{opacity:0.4}
-  .day-cell.past.has-data{opacity:0.6}
-  .day-cell.past:hover{opacity:0.9}
-
-  /* FUTURE — dimmer */
-  .day-cell.future{opacity:0.25}
-  .day-cell.future:hover{opacity:0.5}
+  .day-cell.today{border-color:var(--accent)}
+  .day-cell.today .day-num{color:var(--accent)}
 
   /* COMPLETE — small checkmark badge */
   .day-cell.complete{border-color:rgba(200,240,68,0.35)}

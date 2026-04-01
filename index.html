@@ -312,10 +312,10 @@
   // ── HABITS ───────────────────────────────────────────────────────────────
   const HABITS = {
     body: [
-      { id:'restDay',  label:'Rest day',              icon:'🛌', special:'rest' },
+      { id:'restDay',  label:'Rest day',              icon:'🛌', special:'rest', mutex:'gym' },
       { id:'protein',  label:'Protein consumption',   icon:'🥩' },
       { id:'calories', label:'Calorie count logged',  icon:'🔢' },
-      { id:'gym',      label:'Gym check-in',          icon:'🏋️', disabledBy:'restDay' },
+      { id:'gym',      label:'Gym check-in',          icon:'🏋️', mutex:'restDay' },
       { id:'hydrate',  label:'Drink 2L+ water',       icon:'💧' },
     ],
     mind: [
@@ -348,18 +348,20 @@
   function getKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
   function getDayData(key){ if(!data[key])data[key]={checks:{},notes:'',mood:null}; return data[key]; }
 
-  function isRestOn(key){ const d=data[key]; return !!(d&&d.checks&&d.checks['restDay']); }
-
-  // Total habits for a day (gym excluded on rest days)
-  function getTotal(key){
-    return ALL_HABITS.filter(h => !(isRestOn(key) && h.id==='gym')).length;
-  }
+  // gym and restDay are a mutual-exclusive pair that share 1 progress slot
+  function getTotal(){ return ALL_HABITS.length - 1; } // -1 because gym+restDay = 1 slot
   function getDoneCount(key){
     const d=data[key]; if(!d) return 0;
-    return ALL_HABITS.filter(h=>{
-      if(isRestOn(key) && h.id==='gym') return false;
-      return !!d.checks[h.id];
-    }).length;
+    let count = 0;
+    let gymRestCounted = false;
+    ALL_HABITS.forEach(h => {
+      if(h.id==='gym' || h.id==='restDay'){
+        if(!gymRestCounted && d.checks[h.id]){ count++; gymRestCounted=true; }
+      } else {
+        if(d.checks[h.id]) count++;
+      }
+    });
+    return count;
   }
 
   // 'past' | 'today' | 'future'
@@ -446,7 +448,7 @@
     for(let d=1;d<=daysInMonth;d++){
       const key    = getKey(viewYear,viewMonth,d);
       const done   = getDoneCount(key);
-      const total  = getTotal(key);
+      const total  = getTotal();
       const pct    = Math.round((done/total)*100);
       const status = dateStatus(viewYear,viewMonth,d);
 
@@ -482,7 +484,7 @@
     let s=0;const d=new Date(currentDate);
     while(true){
       const key=getKey(d.getFullYear(),d.getMonth(),d.getDate());
-      const total=getTotal(key);
+      const total=getTotal();
       if(getDoneCount(key)===total&&total>0){s++;d.setDate(d.getDate()-1);}else break;
     }
     document.getElementById('streakCount').textContent=s;
@@ -520,7 +522,7 @@
     const c=document.getElementById(id);c.innerHTML='';
     habits.forEach(h=>{
       const checked  = !!dayData.checks[h.id];
-      const disabled = !!(h.disabledBy && dayData.checks[h.disabledBy]);
+      const disabled = !!(h.mutex && dayData.checks[h.mutex]);
       const item=document.createElement('div');
       let cls='check-item';
       if(checked)             cls+=' checked';
@@ -541,9 +543,9 @@
     el.classList.toggle('checked',checked);
     el.querySelector('.check-box').textContent=checked?'✓':'';
 
-    // Rest day toggled — uncheck & re-render gym
-    if(id==='restDay'){
-      if(checked) dayData.checks['gym']=false;
+    // Mutual exclusion — uncheck the other and re-render body
+    if(habitDef.mutex && checked){
+      dayData.checks[habitDef.mutex]=false;
       renderChecklist('checklist-body',HABITS.body,dayData);
     }
 
@@ -553,12 +555,15 @@
   }
 
   function updateProgress(dayData){
-    const restOn=!!(dayData.checks&&dayData.checks['restDay']);
-    const total=ALL_HABITS.filter(h=>!(restOn&&h.id==='gym')).length;
-    const done =ALL_HABITS.filter(h=>{
-      if(restOn&&h.id==='gym') return false;
-      return !!dayData.checks[h.id];
-    }).length;
+    const total = getTotal();
+    let done = 0, gymRestCounted = false;
+    ALL_HABITS.forEach(h => {
+      if(h.id==='gym' || h.id==='restDay'){
+        if(!gymRestCounted && dayData.checks[h.id]){ done++; gymRestCounted=true; }
+      } else {
+        if(dayData.checks[h.id]) done++;
+      }
+    });
     document.getElementById('progressFill').style.width=Math.round((done/total)*100)+'%';
     document.getElementById('progressText').textContent=`${done}/${total}`;
   }

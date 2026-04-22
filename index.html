@@ -997,8 +997,9 @@
 
   <div class="drawer-section-title">AI Food Analysis</div>
   <div class="input-group">
-    <label>Anthropic API Key</label>
-    <input type="password" id="s-api-key" placeholder="sk-ant-...">
+    <label>Google Gemini API Key</label>
+    <input type="password" id="s-api-key" placeholder="AIza...">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:4px;letter-spacing:0.03em;line-height:1.5">Free tier — get one at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent2);text-decoration:none">aistudio.google.com</a></div>
   </div>
 
   <div class="drawer-section-title">Daily Goals</div>
@@ -1688,55 +1689,69 @@ function editEntry(id) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// AI ANALYSIS
+// AI ANALYSIS (Google Gemini 2.5 Flash)
 // ════════════════════════════════════════════════════════════════════════
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// Structured output schema — guarantees valid JSON with exact fields
+const NUTRITION_SCHEMA = {
+  type: 'object',
+  properties: {
+    name:     { type: 'string',  description: 'Food/dish name, specific (e.g. Chicken Biryani, Masala Dosa)' },
+    qty:      { type: 'string',  description: 'Estimated quantity/serving (e.g. 1 plate ~300g, 1 cup ~240ml)' },
+    calories: { type: 'number',  description: 'Calories (kcal) for this serving' },
+    protein:  { type: 'number',  description: 'Protein in grams' },
+    carbs:    { type: 'number',  description: 'Carbohydrates in grams' },
+    fat:      { type: 'number',  description: 'Fat in grams' },
+    fiber:    { type: 'number',  description: 'Fiber in grams' },
+    note:     { type: 'string',  description: 'Brief note about assumptions, confidence, or ambiguity' }
+  },
+  required: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber', 'note'],
+  propertyOrdering: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber', 'note']
+};
+
+async function callGemini(body) {
+  const resp = await fetch(GEMINI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': settings.apiKey
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || 'Gemini API error');
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    const reason = data.candidates?.[0]?.finishReason || 'empty response';
+    throw new Error('No output from Gemini (' + reason + ')');
+  }
+  return JSON.parse(text);
+}
+
 async function analyzeImage(b64, mimeType) {
-  if (!settings.apiKey) { showToast('Add Anthropic API key in Settings', true); return; }
+  if (!settings.apiKey) { showToast('Add Gemini API key in Settings', true); return; }
   showThinking(true, 'Identifying food and estimating portions…');
   showModalFields(false);
 
-  const systemPrompt = `You are a precise nutrition analysis AI. When given a food image, respond ONLY with a valid JSON object — no markdown, no explanation outside the JSON.
-
-The JSON must have exactly these fields:
-{
-  "name": "Food name (be specific, e.g. Chicken Biryani, Masala Dosa)",
-  "qty": "Estimated quantity/serving (e.g. 1 plate ~300g, 1 cup ~240ml)",
-  "calories": number,
-  "protein": number (grams),
-  "carbs": number (grams),
-  "fat": number (grams),
-  "fiber": number (grams),
-  "note": "Brief note about assumptions, confidence level, and any ambiguity"
-}
-
-For macros: provide values per the estimated serving. Be specific about Indian dishes if applicable. All numbers should be realistic estimates.`;
+  const systemText = `You are a precise nutrition analysis AI. Analyze food images and provide realistic estimates of calories and macros for the estimated serving visible in the image. Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when you recognize them. Include a brief note about assumptions made, your confidence level, or any visible ambiguity. All numbers must be realistic estimates, not placeholders.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': settings.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 600,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mimeType, data: b64 } },
-            { type: 'text', text: 'Analyze this food image and return the JSON.' }
-          ]
-        }]
-      })
+    const json = await callGemini({
+      systemInstruction: { parts: [{ text: systemText }] },
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: b64 } },
+          { text: 'Analyze this food image. Identify the dish, estimate the serving size, and provide calorie/macro estimates.' }
+        ]
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: NUTRITION_SCHEMA,
+        temperature: 0.2
+      }
     });
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-    const raw = data.content[0].text.trim();
-    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
     showThinking(false);
     populateNutritionModalFields(json);
     showModalFields(true);
@@ -1750,7 +1765,7 @@ For macros: provide values per the estimated serving. Be specific about Indian d
 
 async function analyzeText(name, qty) {
   if (!settings.apiKey) {
-    showToast('Add Anthropic API key in Settings', true);
+    showToast('Add Gemini API key in Settings', true);
     // Still show the modal with the entered values so user can fill macros manually
     showThinking(false);
     populateNutritionModalFields({ name, qty, calories:0, protein:0, carbs:0, fat:0, fiber:0, note:'No API key — please enter macros manually.' });
@@ -1760,44 +1775,20 @@ async function analyzeText(name, qty) {
   showThinking(true, `Estimating macros for ${name}…`);
   showModalFields(false);
 
-  const systemPrompt = `You are a precise nutrition analysis AI. Given a food name and an approximate quantity/weight, respond ONLY with a valid JSON object — no markdown, no explanation outside the JSON.
+  const systemText = `You are a precise nutrition analysis AI. Given a food name and an approximate quantity/weight, provide realistic estimates of calories and macros for the specified quantity. Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when recognized. If quantity is vague (e.g. "1 plate", "1 bowl"), assume a standard serving size and mention that assumption in the note. All numbers must be realistic estimates.`;
 
-The JSON must have exactly these fields:
-{
-  "name": "Food name (refined/standardized if helpful)",
-  "qty": "Quantity/serving description",
-  "calories": number,
-  "protein": number (grams),
-  "carbs": number (grams),
-  "fat": number (grams),
-  "fiber": number (grams),
-  "note": "Brief note about typical preparation, assumptions, or confidence"
-}
-
-Provide realistic estimates for the specified quantity. Be specific about regional dishes (Indian, Thai, etc.) when recognized. If quantity is vague (e.g. "1 plate"), assume a standard serving size and mention it in the note.`;
-
-  const userMsg = `Food: ${name}\nQuantity: ${qty || 'standard serving'}\n\nReturn the JSON with estimated calories and macros for this specific quantity.`;
+  const userText = `Food: ${name}\nQuantity: ${qty || 'standard serving'}\n\nProvide estimated calories and macros for this specific quantity.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': settings.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 600,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }]
-      })
+    const json = await callGemini({
+      systemInstruction: { parts: [{ text: systemText }] },
+      contents: [{ parts: [{ text: userText }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: NUTRITION_SCHEMA,
+        temperature: 0.2
+      }
     });
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-    const raw = data.content[0].text.trim();
-    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
     // Preserve user's input if AI didn't echo it
     if (!json.name) json.name = name;
     if (qty && !json.qty) json.qty = qty;

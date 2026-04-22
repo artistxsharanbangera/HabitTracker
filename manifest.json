@@ -1,13 +1,13 @@
 {
-  "name": "Daily Habit Tracker",
-  "short_name": "Habits",
-  "description": "Track your daily habits and build streaks.",
-  "start_url": "/HabitTracker/",
-  "scope": "/HabitTracker/",
+  "name": "Daily — Habits & Nutrition",
+  "short_name": "Daily",
+  "description": "Track your habits, streaks, and daily nutrition in one place.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",

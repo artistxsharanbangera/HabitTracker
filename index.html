@@ -355,6 +355,40 @@
   }
   .mini-field input:focus, .mini-field select:focus { border-color:var(--accent); }
   .manual-hint { font-family:'DM Mono', monospace; font-size:10px; color:var(--text-muted); letter-spacing:0.04em; margin-top:8px; line-height:1.5; }
+  .manual-rows { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .manual-row {
+    display:grid; grid-template-columns:1.7fr 1fr auto; gap:6px; align-items:center;
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px;
+    animation:slideIn 0.2s ease;
+  }
+  .manual-row input {
+    background:var(--bg); border:1px solid transparent; color:var(--text);
+    padding:8px 10px; border-radius:6px; font-family:'DM Mono', monospace;
+    font-size:12px; outline:none; width:100%; transition:border-color 0.2s;
+  }
+  .manual-row input:focus { border-color:var(--accent); }
+  .manual-row .row-remove {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    width:30px; height:30px; border-radius:6px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+    transition:all 0.15s;
+  }
+  .manual-row .row-remove:hover { border-color:var(--danger); color:var(--danger); }
+  .manual-row .row-remove:disabled { opacity:0.3; cursor:not-allowed; }
+  .btn-add-row {
+    background:none; border:1px dashed var(--border); color:var(--text-muted);
+    padding:8px 12px; border-radius:8px; cursor:pointer;
+    font-family:'DM Mono', monospace; font-size:11px; letter-spacing:0.04em;
+    width:100%; transition:all 0.2s; margin-bottom:10px;
+  }
+  .btn-add-row:hover { border-color:var(--accent); color:var(--accent); border-style:solid; }
+  .manual-bottom { display:flex; gap:10px; align-items:flex-end; }
+  .manual-bottom select {
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    padding:9px 10px; border-radius:8px; font-family:'DM Mono', monospace;
+    font-size:12px; outline:none; width:100%;
+  }
+  .manual-bottom .btn-primary { white-space:nowrap; }
 
   /* ── Bottom Tab Bar ── */
   .tab-bar {
@@ -466,16 +500,83 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   .ai-thinking-text { font-family:'DM Mono', monospace; font-size:12px; color:var(--text-muted); font-style:italic; }
   #modal-image { width:100%; border-radius:12px; max-height:180px; object-fit:cover; display:none; border:1px solid var(--border); margin-top:12px; }
-  .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .edit-grid .span2 { grid-column:1 / -1; }
-  .edit-field { display:flex; flex-direction:column; gap:5px; }
-  .edit-field label { font-family:'DM Mono', monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); }
-  .edit-field input {
-    background:var(--bg); border:1px solid var(--border); color:var(--text);
-    padding:9px 11px; border-radius:8px; font-family:'DM Mono', monospace;
-    font-size:12px; outline:none; transition:border-color 0.2s; width:100%;
+
+  /* Multi-item list in modal */
+  .btn-add-item {
+    background:none; border:1px solid var(--border); color:var(--text-muted);
+    border-radius:6px; padding:4px 10px; font-family:'DM Mono', monospace; font-size:10px;
+    cursor:pointer; letter-spacing:0.05em; transition:all 0.2s; text-transform:none;
   }
-  .edit-field input:focus { border-color:var(--accent); }
+  .btn-add-item:hover { border-color:var(--accent); color:var(--accent); }
+
+  #items-list { display:flex; flex-direction:column; gap:8px; }
+  .item-card {
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:11px 12px; display:flex; flex-direction:column; gap:8px; position:relative;
+    animation:slideIn 0.25s ease;
+  }
+  .item-card.thinking { opacity:0.6; pointer-events:none; }
+  .item-card-header { display:flex; gap:8px; align-items:flex-start; }
+  .item-card-inputs { flex:1; display:flex; flex-direction:column; gap:6px; }
+  .item-name-input {
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    padding:8px 10px; border-radius:7px; font-family:'DM Sans', sans-serif;
+    font-size:13px; font-weight:400; outline:none; transition:border-color 0.2s; width:100%;
+  }
+  .item-name-input:focus { border-color:var(--accent); }
+  .item-qty-input {
+    background:var(--surface2); border:1px solid var(--border); color:var(--text-muted);
+    padding:6px 10px; border-radius:7px; font-family:'DM Mono', monospace;
+    font-size:11px; outline:none; transition:border-color 0.2s; width:100%;
+  }
+  .item-qty-input:focus { border-color:var(--accent); color:var(--text); }
+  .item-remove-btn {
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    width:28px; height:28px; border-radius:7px; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+    transition:all 0.15s;
+  }
+  .item-remove-btn:hover { border-color:var(--danger); color:var(--danger); }
+
+  .item-macros-grid {
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:5px;
+  }
+  .macro-input-wrap {
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:var(--surface2); border-radius:6px; padding:5px 3px;
+    border:1px solid transparent; transition:border-color 0.2s;
+  }
+  .macro-input-wrap:focus-within { border-color:var(--accent); }
+  .macro-input-label {
+    font-family:'DM Mono', monospace; font-size:8px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--text-muted);
+  }
+  .macro-input-label.cal { color:var(--gold); }
+  .macro-input-label.p { color:var(--protein); }
+  .macro-input-label.c { color:var(--carbs); }
+  .macro-input-label.f { color:var(--fat); }
+  .macro-input-label.fib { color:var(--fiber); }
+  .macro-input {
+    width:100%; background:none; border:none; color:var(--text); outline:none;
+    font-family:'Playfair Display', serif; font-size:14px; font-weight:600;
+    text-align:center; padding:0; -moz-appearance:textfield;
+  }
+  .macro-input::-webkit-outer-spin-button,
+  .macro-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+
+  .items-total {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:12px; padding:12px 14px; background:var(--surface2);
+    border-radius:10px; border:1px solid var(--border);
+  }
+  .items-total-label { font-family:'DM Mono', monospace; font-size:10px; color:var(--text-muted); letter-spacing:0.15em; text-transform:uppercase; }
+  .items-total-val { font-family:'Playfair Display', serif; font-size:20px; font-weight:700; color:var(--gold); }
+
+  .items-empty {
+    text-align:center; padding:20px; color:var(--text-dim);
+    font-family:'DM Mono', monospace; font-size:11px; letter-spacing:0.03em;
+  }
+
   .ai-note {
     font-family:'DM Mono', monospace; font-size:11px; color:var(--text-dim);
     font-style:italic; padding:10px 12px; background:var(--surface2); border-radius:8px; line-height:1.6;
@@ -574,6 +675,9 @@
     .manual-grid .span4 { grid-column:span 2; }
     .edit-grid { grid-template-columns:1fr; }
     .edit-grid .span2 { grid-column:1; }
+    .item-macros-grid { grid-template-columns:repeat(5, 1fr); gap:3px; }
+    .macro-input { font-size:12px; }
+    .macro-input-label { font-size:7px; }
   }
 </style>
 </head>
@@ -809,24 +913,21 @@
       </div>
 
       <div class="add-panel" id="panel-manual">
-        <div class="manual-grid">
-          <div class="mini-field span4">
-            <label>Food / Dish Name</label>
-            <input type="text" id="m-name" placeholder="e.g. Chicken Biryani, Masala Dosa">
-          </div>
-          <div class="mini-field span2">
-            <label>Quantity / Weight</label>
-            <input type="text" id="m-qty" placeholder="e.g. 200g, 1 plate, 1 cup">
-          </div>
-          <div class="mini-field span2">
+        <div class="manual-rows" id="manual-rows">
+          <!-- rows added dynamically; one row by default -->
+        </div>
+        <button class="btn-add-row" id="add-manual-row-btn">+ Add another item</button>
+
+        <div class="manual-bottom">
+          <div class="mini-field" style="flex:1">
             <label>Meal</label>
             <select id="m-meal">
               <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
             </select>
           </div>
+          <button class="btn-primary" id="analyze-manual-btn">✨ Analyze with AI</button>
         </div>
-        <button class="btn-primary" id="analyze-manual-btn" style="margin-top:4px">✨ Analyze with AI</button>
-        <div class="manual-hint">AI estimates macros from the name &amp; quantity. You can edit before saving.</div>
+        <div class="manual-hint">Add multiple items in one go. AI estimates macros for each — you can edit before saving.</div>
       </div>
     </div>
   </div>
@@ -898,36 +999,16 @@
       </div>
 
       <div id="modal-fields" style="display:none">
-        <div class="section-label" style="margin-top:14px">Details</div>
-        <div class="edit-grid">
-          <div class="edit-field span2">
-            <label>Food / Dish Name</label>
-            <input type="text" id="e-name" placeholder="Food name">
-          </div>
-          <div class="edit-field">
-            <label>Quantity / Serving</label>
-            <input type="text" id="e-qty" placeholder="e.g. 1 cup, 200g">
-          </div>
-          <div class="edit-field">
-            <label>Calories (kcal)</label>
-            <input type="number" id="e-cal">
-          </div>
-          <div class="edit-field">
-            <label>Protein (g)</label>
-            <input type="number" id="e-protein">
-          </div>
-          <div class="edit-field">
-            <label>Carbs (g)</label>
-            <input type="number" id="e-carbs">
-          </div>
-          <div class="edit-field">
-            <label>Fat (g)</label>
-            <input type="number" id="e-fat">
-          </div>
-          <div class="edit-field">
-            <label>Fiber (g)</label>
-            <input type="number" id="e-fiber">
-          </div>
+        <div class="section-label" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+          <span>Detected items</span>
+          <button class="btn-add-item" id="add-item-btn" title="Add another item">+ Add item</button>
+        </div>
+
+        <div id="items-list"></div>
+
+        <div class="items-total">
+          <span class="items-total-label">Total</span>
+          <span class="items-total-val"><span id="items-total-cal">0</span> kcal</span>
         </div>
 
         <div class="ai-note" id="ai-note" style="margin-top:12px">
@@ -943,7 +1024,7 @@
         </div>
 
         <div class="modal-actions">
-          <button class="btn-secondary" id="re-analyze-btn">Re-analyze</button>
+          <button class="btn-secondary" id="re-analyze-btn">↻ Recalculate</button>
           <button class="btn-primary" id="confirm-add-btn">Add to Log</button>
         </div>
       </div>
@@ -1694,21 +1775,35 @@ function editEntry(id) {
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-// Structured output schema — guarantees valid JSON with exact fields
-const NUTRITION_SCHEMA = {
+// Single item schema
+const ITEM_SCHEMA = {
   type: 'object',
   properties: {
-    name:     { type: 'string',  description: 'Food/dish name, specific (e.g. Chicken Biryani, Masala Dosa)' },
-    qty:      { type: 'string',  description: 'Estimated quantity/serving (e.g. 1 plate ~300g, 1 cup ~240ml)' },
+    name:     { type: 'string',  description: 'Specific dish/food name (e.g. Chicken Biryani, Masala Dosa, Steamed Broccoli)' },
+    qty:      { type: 'string',  description: 'Estimated quantity/serving (e.g. 200g, 1 cup, 1 small bowl)' },
     calories: { type: 'number',  description: 'Calories (kcal) for this serving' },
     protein:  { type: 'number',  description: 'Protein in grams' },
     carbs:    { type: 'number',  description: 'Carbohydrates in grams' },
     fat:      { type: 'number',  description: 'Fat in grams' },
-    fiber:    { type: 'number',  description: 'Fiber in grams' },
-    note:     { type: 'string',  description: 'Brief note about assumptions, confidence, or ambiguity' }
+    fiber:    { type: 'number',  description: 'Fiber in grams' }
   },
-  required: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber', 'note'],
-  propertyOrdering: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber', 'note']
+  required: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber'],
+  propertyOrdering: ['name', 'qty', 'calories', 'protein', 'carbs', 'fat', 'fiber']
+};
+
+// Multi-item response schema
+const NUTRITION_SCHEMA = {
+  type: 'object',
+  properties: {
+    items: {
+      type: 'array',
+      description: 'List of distinct food items / dishes',
+      items: ITEM_SCHEMA
+    },
+    note: { type: 'string', description: 'Brief overall note about assumptions, confidence, or ambiguity' }
+  },
+  required: ['items', 'note'],
+  propertyOrdering: ['items', 'note']
 };
 
 async function callGemini(body) {
@@ -1732,10 +1827,14 @@ async function callGemini(body) {
 
 async function analyzeImage(b64, mimeType) {
   if (!settings.apiKey) { showToast('Add Gemini API key in Settings', true); return; }
-  showThinking(true, 'Identifying food and estimating portions…');
+  showThinking(true, 'Identifying dishes and estimating portions…');
   showModalFields(false);
 
-  const systemText = `You are a precise nutrition analysis AI. Analyze food images and provide realistic estimates of calories and macros for the estimated serving visible in the image. Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when you recognize them. Include a brief note about assumptions made, your confidence level, or any visible ambiguity. All numbers must be realistic estimates, not placeholders.`;
+  const systemText = `You are a precise nutrition analysis AI. Analyze food images and identify EACH distinct dish, food item, or component visible — including side dishes, sauces, drinks, garnishes, and condiments if they're a meaningful portion.
+
+For each item, estimate the visible portion size and provide accurate calorie/macro estimates. Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when you recognize them. Return realistic numbers, not placeholders.
+
+In the overall note, mention any assumptions, low-confidence identifications, or ambiguity (e.g. "Couldn't tell if rice was plain or jeera").`;
 
   try {
     const json = await callGemini({
@@ -1743,7 +1842,7 @@ async function analyzeImage(b64, mimeType) {
       contents: [{
         parts: [
           { inline_data: { mime_type: mimeType, data: b64 } },
-          { text: 'Analyze this food image. Identify the dish, estimate the serving size, and provide calorie/macro estimates.' }
+          { text: 'Analyze this food image. List every distinct dish/item separately with its own portion estimate and macros.' }
         ]
       }],
       generationConfig: {
@@ -1758,26 +1857,40 @@ async function analyzeImage(b64, mimeType) {
   } catch(err) {
     showThinking(false);
     showToast('AI error: ' + err.message, true);
-    populateNutritionModalFields({ name:'', qty:'', calories:0, protein:0, carbs:0, fat:0, fiber:0, note:'Analysis failed — please enter manually.' });
+    populateNutritionModalFields({ items: [emptyItem()], note: 'Analysis failed — please enter items manually.' });
     showModalFields(true);
   }
 }
 
-async function analyzeText(name, qty) {
+// items: array of { name, qty } (macros optional, will be filled by AI)
+async function analyzeText(items) {
+  if (!Array.isArray(items)) items = [items];
+  // Filter out empty entries
+  items = items.filter(i => (i.name || '').trim());
+  if (items.length === 0) { showToast('Add at least one item with a name', true); return; }
+
   if (!settings.apiKey) {
     showToast('Add Gemini API key in Settings', true);
-    // Still show the modal with the entered values so user can fill macros manually
     showThinking(false);
-    populateNutritionModalFields({ name, qty, calories:0, protein:0, carbs:0, fat:0, fiber:0, note:'No API key — please enter macros manually.' });
+    populateNutritionModalFields({
+      items: items.map(i => ({ name: i.name, qty: i.qty || '', calories:0, protein:0, carbs:0, fat:0, fiber:0 })),
+      note: 'No API key — please enter macros manually.'
+    });
     showModalFields(true);
     return;
   }
-  showThinking(true, `Estimating macros for ${name}…`);
+
+  showThinking(true, items.length === 1 ? `Estimating macros for ${items[0].name}…` : `Estimating macros for ${items.length} items…`);
   showModalFields(false);
 
-  const systemText = `You are a precise nutrition analysis AI. Given a food name and an approximate quantity/weight, provide realistic estimates of calories and macros for the specified quantity. Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when recognized. If quantity is vague (e.g. "1 plate", "1 bowl"), assume a standard serving size and mention that assumption in the note. All numbers must be realistic estimates.`;
+  const systemText = `You are a precise nutrition analysis AI. Given a list of food items with names and approximate quantities/weights, return accurate calorie and macro estimates for EACH item separately, in the same order provided.
 
-  const userText = `Food: ${name}\nQuantity: ${qty || 'standard serving'}\n\nProvide estimated calories and macros for this specific quantity.`;
+Treat the user's item names and quantities as authoritative — do not change them unless completely necessary. Provide realistic macro estimates per the specified quantity. If a quantity is vague (e.g. "1 plate"), assume a standard serving size and mention this in the overall note.
+
+Be specific about regional dishes (Indian, Thai, Chinese, Mexican, etc.) when recognized. Numbers must be realistic, not placeholders.`;
+
+  const itemsList = items.map((i, idx) => `${idx + 1}. ${i.name} — ${i.qty || 'standard serving'}`).join('\n');
+  const userText = `Items to analyze:\n${itemsList}\n\nReturn one item object per item above, in the same order, with calories and macros for each specific quantity.`;
 
   try {
     const json = await callGemini({
@@ -1789,19 +1902,36 @@ async function analyzeText(name, qty) {
         temperature: 0.2
       }
     });
-    // Preserve user's input if AI didn't echo it
-    if (!json.name) json.name = name;
-    if (qty && !json.qty) json.qty = qty;
+    // Preserve user-provided names/qtys if AI dropped them
+    if (json.items && Array.isArray(json.items)) {
+      json.items = json.items.map((aiItem, idx) => {
+        const userItem = items[idx] || {};
+        return {
+          name: aiItem.name || userItem.name || '',
+          qty:  aiItem.qty  || userItem.qty  || '',
+          calories: aiItem.calories || 0,
+          protein:  aiItem.protein  || 0,
+          carbs:    aiItem.carbs    || 0,
+          fat:      aiItem.fat      || 0,
+          fiber:    aiItem.fiber    || 0
+        };
+      });
+    }
     showThinking(false);
     populateNutritionModalFields(json);
     showModalFields(true);
   } catch(err) {
     showThinking(false);
     showToast('AI error: ' + err.message, true);
-    populateNutritionModalFields({ name, qty, calories:0, protein:0, carbs:0, fat:0, fiber:0, note:'Analysis failed — please enter macros manually.' });
+    populateNutritionModalFields({
+      items: items.map(i => ({ name: i.name, qty: i.qty || '', calories:0, protein:0, carbs:0, fat:0, fiber:0 })),
+      note: 'Analysis failed — please enter macros manually.'
+    });
     showModalFields(true);
   }
 }
+
+function emptyItem() { return { name:'', qty:'', calories:0, protein:0, carbs:0, fat:0, fiber:0 }; }
 
 // ════════════════════════════════════════════════════════════════════════
 // NUTRITION MODAL HELPERS
@@ -1815,6 +1945,10 @@ function closeNutritionModal() {
   document.getElementById('image-preview').style.display = 'none';
   showModalFields(false);
   showThinking(false);
+  // Reset confirm button
+  const btn = document.getElementById('confirm-add-btn');
+  btn.textContent = 'Add to Log';
+  delete btn.dataset.editId;
 }
 function handleNutritionOverlayClick(e) { if (e.target.id === 'nutritionOverlay') closeNutritionModal(); }
 function showThinking(show, text='') {
@@ -1822,23 +1956,103 @@ function showThinking(show, text='') {
   if (text) document.getElementById('thinking-text').textContent = text;
 }
 function showModalFields(show) { document.getElementById('modal-fields').style.display = show ? 'block' : 'none'; }
+
+// Render items list into the modal
 function populateNutritionModalFields(json) {
-  document.getElementById('e-name').value = json.name || '';
-  document.getElementById('e-qty').value = json.qty || '';
-  document.getElementById('e-cal').value = json.calories || 0;
-  document.getElementById('e-protein').value = json.protein || 0;
-  document.getElementById('e-carbs').value = json.carbs || 0;
-  document.getElementById('e-fat').value = json.fat || 0;
-  document.getElementById('e-fiber').value = json.fiber || 0;
+  const items = (json.items && Array.isArray(json.items) && json.items.length > 0) ? json.items : [emptyItem()];
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  items.forEach(item => list.appendChild(makeItemCard(item)));
   document.getElementById('ai-note-text').textContent = json.note || '';
+  recalcItemsTotal();
 }
+
+function makeItemCard(item = {}) {
+  const card = document.createElement('div');
+  card.className = 'item-card';
+  card.innerHTML = `
+    <div class="item-card-header">
+      <div class="item-card-inputs">
+        <input class="item-name-input" type="text" placeholder="Dish name" value="${escapeAttr(item.name || '')}">
+        <input class="item-qty-input" type="text" placeholder="Quantity / weight (e.g. 200g)" value="${escapeAttr(item.qty || '')}">
+      </div>
+      <button class="item-remove-btn" title="Remove this item">✕</button>
+    </div>
+    <div class="item-macros-grid">
+      <div class="macro-input-wrap">
+        <span class="macro-input-label cal">kcal</span>
+        <input class="macro-input cal-input" type="number" inputmode="numeric" value="${Math.round(+item.calories || 0)}">
+      </div>
+      <div class="macro-input-wrap">
+        <span class="macro-input-label p">P</span>
+        <input class="macro-input p-input" type="number" inputmode="numeric" value="${Math.round(+item.protein || 0)}">
+      </div>
+      <div class="macro-input-wrap">
+        <span class="macro-input-label c">C</span>
+        <input class="macro-input c-input" type="number" inputmode="numeric" value="${Math.round(+item.carbs || 0)}">
+      </div>
+      <div class="macro-input-wrap">
+        <span class="macro-input-label f">F</span>
+        <input class="macro-input f-input" type="number" inputmode="numeric" value="${Math.round(+item.fat || 0)}">
+      </div>
+      <div class="macro-input-wrap">
+        <span class="macro-input-label fib">Fib</span>
+        <input class="macro-input fib-input" type="number" inputmode="numeric" value="${Math.round(+item.fiber || 0)}">
+      </div>
+    </div>
+  `;
+  card.querySelector('.item-remove-btn').addEventListener('click', () => {
+    card.remove();
+    recalcItemsTotal();
+    // Always keep at least one card
+    if (document.querySelectorAll('#items-list .item-card').length === 0) {
+      document.getElementById('items-list').appendChild(makeItemCard());
+      recalcItemsTotal();
+    }
+  });
+  // Live total update on calorie change
+  card.querySelectorAll('.macro-input').forEach(input => input.addEventListener('input', recalcItemsTotal));
+  return card;
+}
+
+function escapeAttr(s) { return (s+'').replace(/"/g, '&quot;'); }
+
+function recalcItemsTotal() {
+  let total = 0;
+  document.querySelectorAll('#items-list .item-card .cal-input').forEach(input => {
+    total += +input.value || 0;
+  });
+  document.getElementById('items-total-cal').textContent = Math.round(total);
+}
+
+function getItemsFromModal() {
+  const items = [];
+  document.querySelectorAll('#items-list .item-card').forEach(card => {
+    const name = card.querySelector('.item-name-input').value.trim();
+    if (!name) return; // skip blank rows
+    items.push({
+      name,
+      qty:      card.querySelector('.item-qty-input').value.trim(),
+      calories: +card.querySelector('.cal-input').value || 0,
+      protein:  +card.querySelector('.p-input').value || 0,
+      carbs:    +card.querySelector('.c-input').value || 0,
+      fat:      +card.querySelector('.f-input').value || 0,
+      fiber:    +card.querySelector('.fib-input').value || 0
+    });
+  });
+  return items;
+}
+
 function openNutritionModalWithData(entry, isEdit=false, editId=null) {
   openNutritionModal();
   showThinking(false);
+  // An existing entry is a single item — wrap it in items array
   populateNutritionModalFields({
-    name: entry.name, qty: entry.qty,
-    calories: entry.calories, protein: entry.protein,
-    carbs: entry.carbs, fat: entry.fat, fiber: entry.fiber,
+    items: [{
+      name: entry.name, qty: entry.qty,
+      calories: entry.calories, protein: entry.protein,
+      carbs: entry.carbs, fat: entry.fat, fiber: entry.fiber
+    }],
     note: entry.note || ''
   });
   showModalFields(true);
@@ -2065,9 +2279,19 @@ document.getElementById('analyze-btn').addEventListener('click', () => {
   modalImg.src = pendingImageB64.dataUrl; modalImg.style.display = 'block';
   analyzeImage(pendingImageB64.b64, pendingImageB64.mime);
 });
-document.getElementById('re-analyze-btn').addEventListener('click', () => {
-  if (!pendingImageB64) return;
-  analyzeImage(pendingImageB64.b64, pendingImageB64.mime);
+// Recalculate — re-run AI using the current items in the modal as the source of truth
+document.getElementById('re-analyze-btn').addEventListener('click', async () => {
+  const items = getItemsFromModal();
+  if (items.length === 0) { showToast('No items to recalculate', true); return; }
+  // Always use text-based recalc since the user has now declared what's on the plate.
+  // This respects user edits to dish names and weights.
+  await analyzeText(items.map(i => ({ name: i.name, qty: i.qty })));
+});
+
+// Add another blank item card
+document.getElementById('add-item-btn').addEventListener('click', () => {
+  document.getElementById('items-list').appendChild(makeItemCard());
+  recalcItemsTotal();
 });
 
 // Meal pills
@@ -2076,48 +2300,110 @@ document.querySelectorAll('.meal-pill').forEach(p => p.addEventListener('click',
   p.classList.add('active');
 }));
 
-// Confirm add
+// Confirm — adds ALL items in the modal as separate log entries (sharing meal + image thumb)
 document.getElementById('confirm-add-btn').addEventListener('click', () => {
   const btn = document.getElementById('confirm-add-btn');
-  const entry = {
-    name: document.getElementById('e-name').value.trim() || 'Unknown food',
-    qty: document.getElementById('e-qty').value.trim(),
-    calories: +document.getElementById('e-cal').value || 0,
-    protein: +document.getElementById('e-protein').value || 0,
-    carbs: +document.getElementById('e-carbs').value || 0,
-    fat: +document.getElementById('e-fat').value || 0,
-    fiber: +document.getElementById('e-fiber').value || 0,
-    meal: getSelectedMeal(),
-    note: document.getElementById('ai-note-text').textContent,
-    imageThumb: pendingImageB64 ? pendingImageB64.dataUrl : (btn.dataset.editId ? (getNutritionDay(currentDate).entries.find(e => e.id === btn.dataset.editId)?.imageThumb || null) : null),
-    addedAt: new Date().toISOString()
-  };
+  const items = getItemsFromModal();
+  if (items.length === 0) { showToast('Add at least one named item', true); return; }
+
+  const meal = getSelectedMeal();
+  const note = document.getElementById('ai-note-text').textContent;
   const editId = btn.dataset.editId;
+
+  // Determine thumb: from new pending image, or preserved from existing entry being edited
+  const existingThumb = editId
+    ? (getNutritionDay(currentDate).entries.find(e => e.id === editId)?.imageThumb || null)
+    : null;
+  const thumb = pendingImageB64 ? pendingImageB64.dataUrl : existingThumb;
+
   if (editId) {
+    // Edit mode: update the single existing entry with the FIRST item only
+    // (additional items get added as new entries)
     const day = getNutritionDay(currentDate);
     const idx = day.entries.findIndex(e => e.id === editId);
-    if (idx !== -1) { entry.id = editId; day.entries[idx] = entry; }
+    if (idx !== -1) {
+      const first = items[0];
+      day.entries[idx] = {
+        id: editId,
+        name: first.name, qty: first.qty,
+        calories: first.calories, protein: first.protein, carbs: first.carbs,
+        fat: first.fat, fiber: first.fiber,
+        meal, note, imageThumb: existingThumb,
+        addedAt: day.entries[idx].addedAt || new Date().toISOString()
+      };
+    }
+    // Add any extra items as new entries
+    items.slice(1).forEach(item => {
+      day.entries.push({
+        id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+        ...item, meal, note, imageThumb: thumb,
+        addedAt: new Date().toISOString()
+      });
+    });
     save();
     renderAll();
-    showToast('Updated ✓');
+    showToast(items.length === 1 ? 'Updated ✓' : `Updated + added ${items.length - 1} ✓`);
   } else {
-    addEntry(entry);
+    // New: add each item as its own entry
+    items.forEach(item => {
+      addEntry({ ...item, meal, note, imageThumb: thumb });
+    });
+    if (items.length > 1) showToast(`Added ${items.length} items ✓`);
   }
+
   closeNutritionModal();
   document.getElementById('file-input').value = '';
   document.getElementById('camera-input').value = '';
   pendingImageB64 = null;
   document.getElementById('image-preview').style.display = 'none';
-  btn.textContent = 'Add to Log';
-  delete btn.dataset.editId;
 });
 
-// Manual (text) analyze with AI
+// ── Manual rows management ──────────────────────────────────────────
+function makeManualRow(focusName = false) {
+  const row = document.createElement('div');
+  row.className = 'manual-row';
+  row.innerHTML = `
+    <input class="m-row-name" type="text" placeholder="Food / dish name">
+    <input class="m-row-qty"  type="text" placeholder="Qty (e.g. 200g)">
+    <button class="row-remove" title="Remove">✕</button>
+  `;
+  row.querySelector('.row-remove').addEventListener('click', () => {
+    row.remove();
+    // Always keep at least one row
+    if (document.querySelectorAll('#manual-rows .manual-row').length === 0) {
+      ensureOneManualRow();
+    }
+  });
+  document.getElementById('manual-rows').appendChild(row);
+  if (focusName) row.querySelector('.m-row-name').focus();
+  return row;
+}
+function ensureOneManualRow() {
+  if (document.querySelectorAll('#manual-rows .manual-row').length === 0) makeManualRow();
+}
+function getManualItems() {
+  const items = [];
+  document.querySelectorAll('#manual-rows .manual-row').forEach(row => {
+    const name = row.querySelector('.m-row-name').value.trim();
+    if (!name) return;
+    items.push({ name, qty: row.querySelector('.m-row-qty').value.trim() });
+  });
+  return items;
+}
+function clearManualRows() {
+  document.getElementById('manual-rows').innerHTML = '';
+  makeManualRow();
+}
+// Add row button
+document.getElementById('add-manual-row-btn').addEventListener('click', () => makeManualRow(true));
+// Initial row
+ensureOneManualRow();
+
+// Manual (text) analyze with AI — sends all rows
 document.getElementById('analyze-manual-btn').addEventListener('click', () => {
-  const name = document.getElementById('m-name').value.trim();
-  const qty = document.getElementById('m-qty').value.trim();
+  const items = getManualItems();
+  if (items.length === 0) { showToast('Please enter at least one food name', true); return; }
   const meal = document.getElementById('m-meal').value;
-  if (!name) { showToast('Please enter a food name', true); return; }
 
   // Clear any image state (text flow has no image)
   pendingImageB64 = null;
@@ -2128,11 +2414,10 @@ document.getElementById('analyze-manual-btn').addEventListener('click', () => {
   document.querySelectorAll('.meal-pill').forEach(p => p.classList.toggle('active', p.dataset.meal === meal));
 
   openNutritionModal();
-  analyzeText(name, qty);
+  analyzeText(items);
 
   // Clear manual form after opening modal
-  document.getElementById('m-name').value = '';
-  document.getElementById('m-qty').value = '';
+  clearManualRows();
 });
 
 // Delete/Edit delegation (works across both today + nutrition tabs)
